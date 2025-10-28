@@ -1,9 +1,6 @@
 @startuml
 !include <azure/AzureCommon>
-!include <azure/AzureCompute>
-!include <azure/AzureNetwork>
-!include <azure/AzureGeneral>
-!include <azure/AzureIdentity>
+!include <azure/Analytics/AzureEventHub>
 !include <C4/C4_Deployment>
 
 LAYOUT_AS_SKETCH()
@@ -13,8 +10,8 @@ Deployment_Node(tenant, "Azure Subscription", "Bayport Pega") {
     Deployment_Node(subnetAks, "AKS Subnet", "10.20.1.0/24", "User node pool subnet") {
       Deployment_Node(aks, "Azure Kubernetes Service", "1.27", "Managed Control Plane") {
         Deployment_Node(nodePoolSys, "System Node Pool", "VMSS - Standard_D4s_v5", "Critical system pods") {
-          ContainerInstance(agic, "AGIC Controller", "Ingress controller & App Gateway integration")
-          ContainerInstance(csiSecrets, "Secrets Store CSI", "Key Vault Provider")
+          Container(agic, "AGIC Controller", "Ingress controller & App Gateway integration")
+          Container(csiSecrets, "Secrets Store CSI", "Key Vault Provider")
         }
         Deployment_Node(nodePoolUser, "User Node Pool", "VMSS - Standard_D8s_v5", "Runs Pega workloads") {
           Container(pegaWeb, "pega-web", "Helm release", "Deployments + services (3 replicas)")
@@ -29,7 +26,7 @@ Deployment_Node(tenant, "Azure Subscription", "Bayport Pega") {
     Deployment_Node(subnetData, "Data Services Subnet", "10.20.3.0/24") {
       Node(sqlMi, "Azure SQL Managed Instance", "Business Critical")
       Node(elastic, "Azure Elastic", "Managed Elastic Cluster", "3 data nodes, 2 replicas")
-      Node(eventHub, "Azure Event Hubs", "Standard Tier")
+      Node(eventHub, "Azure Event Hubs <$AzureEventHub>", "Standard Tier")
     }
   }
   Deployment_Node(hubServices, "Shared Services", "Centralized") {

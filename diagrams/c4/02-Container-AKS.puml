@@ -1,5 +1,8 @@
 @startuml
 !include <C4/C4_Container>
+!include <azure/AzureCommon>
+!include <azure/Analytics/AzureEventHub>
+!include <azure/Databases/AzureSQLManagedInstance>
 
 LAYOUT_WITH_LEGEND()
 
@@ -9,9 +12,9 @@ System_Boundary(tenant, "Bayport Pega Tenant") {
     Container(pegaWeb, "Pega Web Tier", "Java", "User interface nodes exposed via HTTP/HTTPS")
     Container(pegaBackground, "Pega Background Processing", "Java", "Queue processors, agents, listeners")
     Container(pegaSearch, "Pega Search Service", "Search", "Embedded search services leveraging Elastic")
-    ContainerDb(db, "Azure SQL Managed Instance", "Pega Rules & Data schema")
+    ContainerDb(db, "Azure SQL Managed Instance <$AzureSQLManagedInstance>", "Pega Rules & Data schema")
     Container(searchCluster, "Azure Elastic (Managed)", "Search Cluster", "Primary/replica nodes for Pega indexing")
-    Container(eventHubNs, "Azure Event Hubs Namespace", "Event Streaming", "Integration events and async workloads")
+    Container(eventHubNs, "Azure Event Hubs Namespace <$AzureEventHub>", "Event Streaming", "Integration events and async workloads")
     Container(keyVault, "Azure Key Vault", "Secrets", "Certificates, connection strings, secrets")
     Container(observability, "Azure Monitor / Log Analytics", "Observability", "Logs, metrics, traces")
     Container(storage, "Azure Storage Account", "Blob Storage", "Attachments, export files, backups")

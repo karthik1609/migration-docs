@@ -1,11 +1,11 @@
 flowchart LR
     subgraph PerfRG[Perf Test Resource Group]
-        LG[Load Generator Pool (AKS Virtual Nodes)]
+        LG[Load Generator Pool - AKS Virtual Nodes]
         DataMgr[Synthetic Data Manager]
         Metrics[Grafana/Kusto Dashboards]
     end
 
-    subgraph TargetRG[Target Env (SIT/UAT)]
+    subgraph TargetRG[Target Env - SIT/UAT]
         WAF[App Gateway WAF]
         AGIC[AGIC]
         Pega[Pega AKS Namespace]

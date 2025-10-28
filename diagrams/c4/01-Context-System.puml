@@ -1,5 +1,8 @@
 @startuml
 !include <C4/C4_Context>
+!include <azure/AzureCommon>
+!include <azure/Analytics/AzureEventHub>
+!include <azure/Databases/AzureSQLManagedInstance>
 
 LAYOUT_WITH_LEGEND()
 
@@ -13,8 +16,8 @@ System_Ext(azureAd, "Microsoft Entra ID", "Authentication and RBAC")
 System_Ext(onPremSql, "On-Prem SQL Server", "Source data store to be migrated")
 System_Ext(onPremElastic, "On-Prem Elastic Cluster", "Current search/indexing platform")
 System_Ext(onPremIntegrations, "On-Prem Integrations", "Legacy downstream/upstream services")
-System_Ext(eventHub, "Azure Event Hubs", "Streaming integration bus")
-System_Ext(managedSql, "Azure SQL Managed Instance", "Target transactional database")
+System_Ext(eventHub, "Azure Event Hubs <$AzureEventHub>", "Streaming integration bus")
+System_Ext(managedSql, "Azure SQL Managed Instance <$AzureSQLManagedInstance>", "Target transactional database")
 System_Ext(internalElastic, "Azure Elastic (Managed)", "Target search/index cluster")
 System_Ext(appGateway, "Azure Application Gateway (WAF)", "Ingress and web application firewall")
 System_Ext(keyVault, "Azure Key Vault", "Secrets management")
