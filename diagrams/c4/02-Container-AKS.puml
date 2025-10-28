@@ -1,0 +1,48 @@
+@startuml
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Bayport End User")
+Person(support, "Support Analyst")
+System_Boundary(tenant, "Bayport Pega Tenant") {
+    Container(pegaWeb, "Pega Web Tier", "Java", "User interface nodes exposed via HTTP/HTTPS")
+    Container(pegaBackground, "Pega Background Processing", "Java", "Queue processors, agents, listeners")
+    Container(pegaSearch, "Pega Search Service", "Search", "Embedded search services leveraging Elastic")
+    ContainerDb(db, "Azure SQL Managed Instance", "Pega Rules & Data schema")
+    Container(searchCluster, "Azure Elastic (Managed)", "Search Cluster", "Primary/replica nodes for Pega indexing")
+    Container(eventHubNs, "Azure Event Hubs Namespace", "Event Streaming", "Integration events and async workloads")
+    Container(keyVault, "Azure Key Vault", "Secrets", "Certificates, connection strings, secrets")
+    Container(observability, "Azure Monitor / Log Analytics", "Observability", "Logs, metrics, traces")
+    Container(storage, "Azure Storage Account", "Blob Storage", "Attachments, export files, backups")
+}
+
+System_Ext(appGateway, "Azure Application Gateway (WAF)")
+System_Ext(azureAd, "Microsoft Entra ID")
+System_Ext(onPremSystems, "On-Prem Integrations")
+System_Ext(onPremSql, "On-Prem SQL Server")
+System_Ext(onPremElastic, "On-Prem Elastic")
+
+Rel(customer, appGateway, "HTTPS")
+Rel(appGateway, pegaWeb, "HTTPS via AGIC")
+Rel(support, pegaWeb, "HTTPS")
+Rel_L(pegaWeb, azureAd, "OAuth2/OpenID Connect")
+Rel(pegaWeb, pegaBackground, "REST gRPC", "Case orchestration")
+Rel(pegaWeb, pegaSearch, "HTTP", "Search queries")
+Rel(pegaBackground, eventHubNs, "AMQP", "Publish async events")
+Rel(pegaBackground, db, "JDBC")
+Rel(pegaBackground, storage, "HTTPS", "File storage")
+Rel(pegaSearch, searchCluster, "HTTPS", "Index storage")
+Rel(pegaWeb, db, "JDBC via private endpoint")
+Rel(pegaWeb, eventHubNs, "HTTPS", "Event triggers")
+Rel(pegaWeb, keyVault, "MSI", "Secrets retrieval")
+Rel(pegaBackground, keyVault, "MSI")
+Rel(pegaSearch, keyVault, "MSI")
+Rel(pegaWeb, observability, "HTTPS", "Logs/metrics")
+Rel(pegaBackground, observability, "HTTPS", "Logs/metrics")
+Rel(pegaSearch, observability, "HTTPS")
+Rel(pegaBackground, searchCluster, "HTTPS", "Index updates")
+Rel(pegaWeb, onPremSystems, "ExpressRoute/VPN", "REST/SOAP")
+Rel(onPremSql, db, "Database migration", "Azure DMS")
+Rel(onPremElastic, searchCluster, "Reindex pipelines")
+@enduml

@@ -1,0 +1,32 @@
+flowchart TD
+    Prep[Cutover Prep Complete?
+    - Dry run signed off
+    - Runbooks approved
+    - Communications sent]
+    Freeze[Change Freeze Start]
+    Snapshot[Take DB + Elastic Snapshots]
+    Deploy[Deploy Helm Release to Prod AKS]
+    VerifySmoke[Run Smoke Tests]
+    Decision1{Smoke Tests Pass?}
+    PerfCheck[Execute targeted perf checks]
+    Decision2{Perf within SLO?}
+    SwitchDNS[Update DNS / Traffic Manager]
+    Monitor[Enhanced monitoring window]
+    Signoff[Business sign-off]
+    RollbackDB[Restore DB Snapshot]
+    RollbackElastic[Restore Elastic Snapshot]
+    RollbackHelm[Helm rollback to prior release]
+    Comm[Send rollback comms]
+
+    Prep --> Freeze --> Snapshot --> Deploy --> VerifySmoke --> Decision1
+    Decision1 -->|No| RollbackHelm
+    Decision1 -->|Yes| PerfCheck --> Decision2
+    Decision2 -->|No| RollbackHelm
+    Decision2 -->|Yes| SwitchDNS --> Monitor --> Signoff
+
+    RollbackHelm --> RollbackDB --> RollbackElastic --> Comm --> Monitor
+
+    classDef pass fill:#dcfce7,stroke:#16a34a;
+    classDef fail fill:#fee2e2,stroke:#dc2626;
+    class Decision1,Decision2 fail;
+    class SwitchDNS,Monitor,Signoff pass;

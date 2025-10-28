@@ -1,0 +1,38 @@
+@startuml
+!include <C4/C4_Context>
+
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Bayport End User", "Uses Pega to manage cases")
+Person(support, "Support Analyst", "Provides L2/L3 support")
+System_Boundary(pegaBoundary, "Pega on AKS") {
+    System(pegaPlatform, "Pega Platform", "Case management application on AKS")
+}
+
+System_Ext(azureAd, "Microsoft Entra ID", "Authentication and RBAC")
+System_Ext(onPremSql, "On-Prem SQL Server", "Source data store to be migrated")
+System_Ext(onPremElastic, "On-Prem Elastic Cluster", "Current search/indexing platform")
+System_Ext(onPremIntegrations, "On-Prem Integrations", "Legacy downstream/upstream services")
+System_Ext(eventHub, "Azure Event Hubs", "Streaming integration bus")
+System_Ext(managedSql, "Azure SQL Managed Instance", "Target transactional database")
+System_Ext(internalElastic, "Azure Elastic (Managed)", "Target search/index cluster")
+System_Ext(appGateway, "Azure Application Gateway (WAF)", "Ingress and web application firewall")
+System_Ext(keyVault, "Azure Key Vault", "Secrets management")
+System_Ext(logAnalytics, "Azure Monitor & Log Analytics", "Observability platform")
+System_Ext(storageAccount, "Azure Storage", "Blob storage for documents and backups")
+
+Rel(customer, appGateway, "HTTPS/TLS")
+Rel(appGateway, pegaPlatform, "HTTPS", "AGIC Ingress")
+Rel(pegaPlatform, managedSql, "JDBC over private endpoint")
+Rel(pegaPlatform, internalElastic, "REST/HTTPS", "Index + Search")
+Rel(pegaPlatform, eventHub, "AMQP/HTTPS", "Publish/subscribe events")
+Rel(pegaPlatform, keyVault, "MSI", "Fetch secrets via Workload Identity")
+Rel(pegaPlatform, logAnalytics, "HTTPS", "Logs & metrics")
+Rel(support, pegaPlatform, "HTTPS", "Admin portal")
+Rel(pegaPlatform, storageAccount, "HTTPS", "Document storage/backups")
+Rel(pegaPlatform, onPremIntegrations, "VPN/ExpressRoute", "REST/SOAP integrations")
+Rel(support, logAnalytics, "Kusto/Portal", "Observability dashboards")
+Rel(onPremSql, managedSql, "Database migration", "DMS / backup-restore")
+Rel(onPremElastic, internalElastic, "Index migration", "Reindex pipelines")
+Rel(pegaPlatform, azureAd, "OAuth/OpenID Connect", "User authentication")
+@enduml
