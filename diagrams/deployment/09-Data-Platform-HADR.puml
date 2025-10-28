@@ -32,4 +32,6 @@ Rel(dataNodes, snapshotRepo, "Snapshots", "Daily + pre-release")
 Rel(eventHub, backupStorage, "Capture", "Stream archive")
 
 Rel_Back(primaryMi, secondaryMi, "Geo-replication", "<30s lag")
+
+UpdateLegend("Owner", "Data Platform Team", "Version 0.1", "2024-06-03", "Initial draft based on target state assumptions")
 @enduml

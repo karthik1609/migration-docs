@@ -1,12 +1,10 @@
 @startuml
+!include <azure/AzureCommon>
+!include <azure/AzureCompute>
+!include <azure/AzureNetwork>
+!include <azure/AzureGeneral>
+!include <azure/AzureIdentity>
 !include <C4/C4_Deployment>
-
-!definelong LAYOUT_AS_SKETCH()
-  skinparam backgroundColor #EEEBDC
-  skinparam handwritten true
-  skinparam defaultFontName "Comic Sans MS"
-  center footer <font color=red>Warning:</font> Created for discussion, needs to be validated
-!enddefinelong
 
 LAYOUT_AS_SKETCH()
 
@@ -14,9 +12,9 @@ Deployment_Node(tenant, "Azure Subscription", "Bayport Pega") {
   Deployment_Node(vnet, "Hub-Spoke VNet", "10.20.0.0/16", "Azure CNI, private endpoints") {
     Deployment_Node(subnetAks, "AKS Subnet", "10.20.1.0/24", "User node pool subnet") {
       Deployment_Node(aks, "Azure Kubernetes Service", "1.27", "Managed Control Plane") {
-          Deployment_Node(nodePoolSys, "System Node Pool", "VMSS - Standard_D4s_v5", "Critical system pods") {
-            Container(agic, "AGIC Controller", "Ingress controller", "App Gateway integration")
-            Container(csiSecrets, "Secrets Store CSI", "CSI driver", "Key Vault provider")
+        Deployment_Node(nodePoolSys, "System Node Pool", "VMSS - Standard_D4s_v5", "Critical system pods") {
+          ContainerInstance(agic, "AGIC Controller", "Ingress controller & App Gateway integration")
+          ContainerInstance(csiSecrets, "Secrets Store CSI", "Key Vault Provider")
         }
         Deployment_Node(nodePoolUser, "User Node Pool", "VMSS - Standard_D8s_v5", "Runs Pega workloads") {
           Container(pegaWeb, "pega-web", "Helm release", "Deployments + services (3 replicas)")
