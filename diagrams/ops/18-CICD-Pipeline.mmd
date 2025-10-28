@@ -1,0 +1,32 @@
+flowchart LR
+    Dev[Developer]
+    Repo[Central Git Repo]
+    PR[Pull Request]
+    Build[Azure DevOps Pipeline - Build]
+    Scan[SAST/Container Scan]
+    Image[Azure Container Registry]
+    HelmPkg[Helm Chart Package]
+    DeploySIT[Deploy to SIT AKS]
+    TestsSIT[Automated Tests]
+    DeployUAT[Deploy to UAT AKS]
+    Approve[Manual Approval]
+    DeployProd[Deploy to Prod AKS]
+    Verify[Post-deploy Verification]
+
+    Dev -->|push| Repo
+    Repo --> PR
+    PR --> Build
+    Build --> Scan
+    Scan -->|pass| Image
+    Scan -->|pass| HelmPkg
+    Image --> DeploySIT
+    HelmPkg --> DeploySIT
+    DeploySIT --> TestsSIT
+    TestsSIT --> DeployUAT
+    DeployUAT --> Approve
+    Approve --> DeployProd
+    DeployProd --> Verify
+    Verify --> Repo
+
+    classDef stage fill:#f8fafc,stroke:#0f172a;
+    class Repo,PR,Build,Scan,Image,HelmPkg,DeploySIT,TestsSIT,DeployUAT,Approve,DeployProd,Verify stage;

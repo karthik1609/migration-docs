@@ -1,0 +1,54 @@
+@startuml
+!include <azure/AzureCommon>
+!include <azure/AzureCompute>
+!include <azure/AzureNetwork>
+!include <azure/AzureGeneral>
+!include <azure/AzureIdentity>
+!include <C4/C4_Deployment>
+
+LAYOUT_AS_SKETCH()
+
+Deployment_Node(tenant, "Azure Subscription", "Bayport Pega") {
+  Deployment_Node(vnet, "Hub-Spoke VNet", "10.20.0.0/16", "Azure CNI, private endpoints") {
+    Deployment_Node(subnetAks, "AKS Subnet", "10.20.1.0/24", "User node pool subnet") {
+      Deployment_Node(aks, "Azure Kubernetes Service", "1.27", "Managed Control Plane") {
+        Deployment_Node(nodePoolSys, "System Node Pool", "VMSS - Standard_D4s_v5", "Critical system pods") {
+          ContainerInstance(agic, "AGIC Controller", "Ingress controller & App Gateway integration")
+          ContainerInstance(csiSecrets, "Secrets Store CSI", "Key Vault Provider")
+        }
+        Deployment_Node(nodePoolUser, "User Node Pool", "VMSS - Standard_D8s_v5", "Runs Pega workloads") {
+          Container(pegaWeb, "pega-web", "Helm release", "Deployments + services (3 replicas)")
+          Container(pegaBatch, "pega-batch", "Helm release", "Background workers (auto-scale 2-6)")
+          Container(pegaStream, "pega-stream", "Helm release", "Kafka-equivalent for queue processors")
+        }
+      }
+    }
+    Deployment_Node(subnetAppGw, "Application Gateway Subnet", "10.20.2.0/24") {
+      Node(appGateway, "Azure Application Gateway v2", "WAF enabled, zone redundant")
+    }
+    Deployment_Node(subnetData, "Data Services Subnet", "10.20.3.0/24") {
+      Node(sqlMi, "Azure SQL Managed Instance", "Business Critical")
+      Node(elastic, "Azure Elastic", "Managed Elastic Cluster", "3 data nodes, 2 replicas")
+      Node(eventHub, "Azure Event Hubs", "Standard Tier")
+    }
+  }
+  Deployment_Node(hubServices, "Shared Services", "Centralized") {
+    Node(keyVault, "Azure Key Vault", "Premium")
+    Node(logAnalytics, "Log Analytics Workspace", "30 day retention")
+    Node(containerRegistry, "Azure Container Registry", "Premium, geo-replicated")
+    Node(storageAccount, "Storage Account", "ZRS")
+  }
+}
+
+Rel(agic, appGateway, "Ingress sync", "Azure Resource Manager")
+Rel(appGateway, pegaWeb, "HTTPS", "Private IP ingress")
+Rel(pegaWeb, sqlMi, "TDS (1433)", "Private endpoint")
+Rel(pegaWeb, elastic, "HTTPS 9243")
+Rel(pegaBatch, eventHub, "AMQP 5671/HTTPS")
+Rel(pegaStream, eventHub, "Optional offload")
+Rel(pegaWeb, keyVault, "Azure AD Workload Identity")
+Rel(pegaBatch, keyVault, "Azure AD Workload Identity")
+Rel(pegaStream, logAnalytics, "Fluent Bit")
+Rel(pegaWeb, logAnalytics, "Azure Monitor Managed Prometheus/Grafana")
+Rel(sqlMi, storageAccount, "Backups", "RA-GRS blob")
+@enduml

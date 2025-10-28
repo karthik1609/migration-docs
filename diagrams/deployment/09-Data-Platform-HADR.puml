@@ -1,0 +1,37 @@
+@startuml
+!include <C4/C4_Component>
+
+LAYOUT_WITH_LEGEND()
+
+Boundary(sqlMi, "Azure SQL Managed Instance") {
+    Component(primaryMi, "Primary Instance", "East US", "Business Critical, Zone redundant")
+    Component(secondaryMi, "Auto-failover Group", "Central US", "Readable secondary")
+}
+
+Boundary(backups, "Backup & Restore") {
+    Component(backupStorage, "Azure Blob RA-GRS", "Long term backup storage")
+    Component(dbaRunbook, "Runbook", "Manual restore procedures")
+}
+
+Boundary(elasticCluster, "Azure Elastic") {
+    Component(dataNodes, "Data Nodes", "3 nodes, zone redundant")
+    Component(ingestNode, "Ingest Node", "Handles indexing")
+    Component(snapshotRepo, "Snapshot Repository", "Azure Storage managed")
+}
+
+Component(appLayer, "Pega Platform", "AKS Pods")
+Component(eventHub, "Azure Event Hubs", "Standard, Capture enabled")
+
+Rel(appLayer, primaryMi, "JDBC", "Primary connection string")
+Rel(appLayer, secondaryMi, "Read-only queries", "Optional read routing")
+Rel(primaryMi, backupStorage, "Automated backups", "Full/Diff/Log")
+Rel(dbaRunbook, backupStorage, "Restore validation", "Monthly DR drill")
+Rel(appLayer, dataNodes, "HTTPS", "Search index reads")
+Rel(appLayer, ingestNode, "HTTPS", "Index writes")
+Rel(dataNodes, snapshotRepo, "Snapshots", "Daily + pre-release")
+Rel(eventHub, backupStorage, "Capture", "Stream archive")
+
+Rel_Back(primaryMi, secondaryMi, "Geo-replication", "<30s lag")
+
+UpdateLegend("Owner", "Data Platform Team", "Version 0.1", "2024-06-03", "Initial draft based on target state assumptions")
+@enduml

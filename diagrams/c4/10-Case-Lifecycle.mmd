@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    participant User as CSR (User)
+    participant Browser as Browser
+    participant WAF as App Gateway (WAF)
+    participant Ingress as AGIC / AKS Ingress
+    participant Web as Pega Web Pod
+    participant Auth as Entra ID
+    participant DB as Azure SQL MI
+    participant Search as Azure Elastic
+    participant Bus as Azure Event Hubs
+    participant Downstream as On-Prem Integration
+
+    User->>Browser: Initiate case
+    Browser->>WAF: HTTPS request
+    WAF->>Ingress: Forward after WAF policy
+    Ingress->>Web: Route to pega-web service
+    Web->>Auth: OAuth authorization code flow
+    Auth-->>Web: ID token + access token
+    Web->>DB: Load operator profile / case data
+    DB-->>Web: Case data
+    Web->>Search: Query recent interactions
+    Search-->>Web: Search results
+    Web->>Bus: Publish CaseInitiated event
+    Bus-->>Downstream: Deliver event to subscribers
+    Web-->>Browser: Render case UI
+
+    rect rgb(219,234,254)
+        Note over Web,DB: JDBC over private endpoint with retry policy
+    end
+
+    rect rgb(254,226,226)
+        Note over Bus,Downstream: Event Hub Capture to Blob for auditing
+    end

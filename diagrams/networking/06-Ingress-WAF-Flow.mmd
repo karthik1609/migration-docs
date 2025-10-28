@@ -1,0 +1,35 @@
+%% Mermaid sequence diagram for ingress + WAF
+sequenceDiagram
+    autonumber
+    participant User as External User
+    participant DNS as Public DNS Zone
+    participant WAF as Azure Application Gateway (WAF)
+    participant AGIC as AGIC Controller
+    participant SVC as AKS Ingress Service
+    participant Pod as Pega Web Pod
+    participant KV as Azure Key Vault
+
+    User->>DNS: Resolve pega.bayport.com
+    DNS-->>User: A record (Public IP WAF)
+    User->>WAF: HTTPS request (TLS 1.2)
+    WAF->>WAF: WAF policy evaluation (OWASP CRS, geo filter)
+    WAF->>AGIC: Health probe via private IP
+    WAF->>AGIC: Forward HTTPS request
+    AGIC->>SVC: Route based on ingress rules
+    SVC->>Pod: HTTP request (mTLS optional)
+    Pod-->>SVC: Response
+    SVC-->>AGIC: Response
+    AGIC-->>WAF: Response
+    WAF-->>User: HTTPS response
+
+    Note over WAF,AGIC: Certificates sourced from Key Vault via MSI
+    AGIC->>KV: Fetch TLS cert secret (managed identity)
+    KV-->>AGIC: PFX + password
+
+    rect rgb(255, 229, 204)
+        Note right of WAF: Web Application Firewall custom rules
+    end
+
+    rect rgb(204, 229, 255)
+        Note right of Pod: Pod disruption budget 1, readiness probe /health
+    end
