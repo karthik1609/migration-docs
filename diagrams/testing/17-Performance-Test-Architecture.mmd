@@ -1,0 +1,48 @@
+flowchart LR
+    subgraph PerfRG[Perf Test Resource Group]
+        LG["Load Generator Pool (AKS Virtual Nodes)"]
+        DataMgr[Synthetic Data Manager]
+        Metrics[Grafana/Kusto Dashboards]
+    end
+
+    subgraph TargetRG["Target Env (SIT/UAT)"]
+        WAF[App Gateway WAF]
+        AGIC[AGIC]
+        Pega[Pega AKS Namespace]
+        SQL[Azure SQL MI]
+        Elastic[Azure Elastic]
+        EventHub[Azure Event Hubs]
+    end
+
+    subgraph Observability[Observability Plane]
+        LogAnalytics[Log Analytics Workspace]
+        AppInsights[Application Insights]
+        Storage[Blob Storage - Test Evidence]
+    end
+
+    LG -->|HTTPS traffic| WAF
+    WAF --> AGIC
+    AGIC --> Pega
+    Pega --> SQL
+    Pega --> Elastic
+    Pega --> EventHub
+
+    LG -->|Control plane| DataMgr
+    DataMgr --> Storage
+
+    Pega -->|Logs/metrics| LogAnalytics
+    SQL --> LogAnalytics
+    EventHub --> LogAnalytics
+    LogAnalytics --> Metrics
+    Metrics --> PerfTeam[Performance Test Team]
+
+    LG --> AppInsights
+    Pega --> AppInsights
+
+    Storage --> PerfTeam
+
+    classDef azure fill:#ecfdf5,stroke:#047857;
+    classDef obs fill:#eff6ff,stroke:#1d4ed8;
+
+    class WAF,AGIC,Pega,SQL,Elastic,EventHub azure;
+    class LogAnalytics,AppInsights,Storage obs;

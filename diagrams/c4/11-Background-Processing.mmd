@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    participant Scheduler as Pega Queue Processor
+    participant Stream as Pega Stream (Kafka)
+    participant BatchPod as pega-batch Pod
+    participant EH as Azure Event Hubs
+    participant Elastic as Azure Elastic
+    participant SQL as Azure SQL MI
+
+    Scheduler->>Stream: Enqueue WorkItem
+    Stream-->>BatchPod: Deliver work item
+    BatchPod->>SQL: Fetch case payload
+    SQL-->>BatchPod: Case data
+    BatchPod->>Elastic: Update search index doc
+    Elastic-->>BatchPod: Ack
+    BatchPod->>EH: Publish background telemetry
+    EH-->>BatchPod: Ack
+    BatchPod->>Scheduler: Complete work item
+
+    rect rgb(243,232,255)
+        Note over BatchPod,EH: Managed identity used for Event Hub auth (Azure AD)
+    end
